@@ -1,0 +1,25 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant::Config.run do |config|
+  # Every Vagrant virtual environment requires a box to build off of.
+  config.vm.box = "vagrant_centos6"
+
+  # The url from where the 'config.vm.box' box will be fetched if it
+  # doesn't already exist on the user's system.
+  config.vm.box_url = "http://dl.dropbox.com/u/4059143/vagrant_centos6.box"
+
+  # Assign this VM to a host-only network IP, allowing you to access it
+  # via the IP. Host-only networks can talk to the host machine as well as
+  # any other machines on the same network, but cannot be accessed (through this
+  # network interface) by any external networks.
+  config.vm.network :hostonly, "192.168.33.10"
+
+  # Allow services to be easily accessed externally
+  config.vm.forward_port 80, 8080, ":auto" => true   # Apache
+
+  # Use a readable hostname to differentiate
+  config.vm.host_name = "drupal7"
+
+  config.vm.provision :puppet, :module_path => "../modules"
+end
