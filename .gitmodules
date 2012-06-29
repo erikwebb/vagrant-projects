@@ -1,6 +1,12 @@
-[submodule "modules/vcsrepo"]
-	path = modules/vcsrepo
-	url = https://github.com/puppetlabs/puppet-vcsrepo.git
-[submodule "modules/mysql"]
-	path = modules/mysql
-	url = https://github.com/puppetlabs/puppetlabs-mysql.git
+[submodule "puppet-modules/apache"]
+	path = puppet-modules/apache
+  url = https://github.com/camptocamp/puppet-apache.git
+[submodule "puppet-modules/php"]
+	path = puppet-modules/php
+  url = https://github.com/treehouseagency/puppet-php.git
+[submodule "puppet-modules/mysql"]
+	path = puppet-modules/mysql
+	url = https://github.com/DavidS/puppet-mysql.git
+[submodule "puppet-modules/pear"]
+	path = puppet-modules/pear
+	url = https://github.com/treehouseagency/puppet-pear.git
