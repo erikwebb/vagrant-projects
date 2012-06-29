@@ -1,17 +1,19 @@
-# Readme #
+# README #
+
+## Dependences ##
+
+1. [Vagrant](http://vagrantup.com/)
+1. [Veewee](https://github.com/jedi4ever/veewee)
 
 ## Setup ##
 
-```
-  $ vagrant box add vagrant_centos6 http://dl.dropbox.com/u/4059143/vagrant_centos6.box
-  $ cd drupal7-vanilla
-  $ vagrant up
-```
-
-Done.
+First, build the Vagrant basebox using Veewee -
+``
+  vagrant basebox define 'CentOS-6.2-x86_64' 'CentOS-6.2-x86_64-minimal'
+  vagrant basebox build CentOS-6.2-x86_64
+  vagrant box add ‘CentOS-6.2-x86_64′ ‘CentOS-6.2-x86_64.box’
+``
 
 ## Todo ##
 
-- Replace Percona Server with MariaDB when [RHEL packages are available](https://mariadb.atlassian.net/browse/MDEV-74)
-- Move current classes to use a common modules directory shared by all boxes
-
+- Replace MySQL with MariaDB
