@@ -1,9 +1,5 @@
 include base
 
-package { 'httpd':
-  provider => 'yum',
-}
-
 include apache
 include php, pear
 include mysql::server
