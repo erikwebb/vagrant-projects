@@ -1,16 +1,16 @@
+include base
+
 include apache
 include php, pear
 include mysql::server
 include varnish
-
-package { 'php-devel': }
 
 class { 'memcached':
   max_memory => 128,
 }
 
 pear::package { "drush":
-  version => "5.8.0",
+  version => "5.4.0",
   repository => "pear.drush.org",
 }
 
