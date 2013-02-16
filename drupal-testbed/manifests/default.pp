@@ -1,25 +1,12 @@
-include base
+class {'apache': }
 
-include apache
-include php, pear
-include mysql::server
-include varnish
-
-class { 'memcached':
-  max_memory => 128,
+class { 'mysql::server':
+	config_hash => { 'root_password' => '' }
 }
 
-pear::package { "drush":
-  version => "5.4.0",
-  repository => "pear.drush.org",
-}
-
-# php::module { "xdebug": }
-# pear::package { "xhprof-0.9.2": }
-
-varnish::instance { "drupal":
-  backend      => "127.0.0.1:8080",
-  address      => ["127.0.0.1:80"],
-  admin_port   => "6082",
-  storage      => ["file,/var/varnish/storage1.bin,32M"],
+mysql::db { 'mydb':
+	user     => 'myuser',
+	password => 'mypass',
+	host     => 'localhost',
+	grant    => ['all'],
 }
