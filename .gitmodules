@@ -13,3 +13,6 @@
 [submodule "puppet-modules/memcached"]
 	path = puppet-modules/memcached
 	url = https://github.com/saz/puppet-memcached.git
+[submodule "puppet-modules/apache"]
+	path = puppet-modules/apache
+	url = https://github.com/puppetlabs/puppetlabs-apache
