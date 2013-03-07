@@ -51,17 +51,6 @@ exec { "download-jmeter-plugins-libs":
   require => Exec["download-jmeter"],
 }
 
-file { "/usr/bin/jmeter.sh":
-  ensure => link,
-  target => "/opt/apache-jmeter-2.9/bin/jmeter",
-  require => Exec["download-jmeter"],
-}
-
-file { "/etc/profile.d/jmeter.sh":
-  content => "PATH=\$PATH:/opt/apache-jmeter-2.9/bin",
-  require => Exec["download-jmeter"],
-}
-
 # Enable saving of thread counts
 exec { "enable-jmeter-thread-counts":
   command => "perl -pi -e 's/^#jmeter.save.saveservice.thread_counts=false$/jmeter.save.saveservice.thread_counts=true/' /opt/apache-jmeter-2.9/bin/jmeter.properties",
