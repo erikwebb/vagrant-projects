@@ -1,3 +1,11 @@
+# Defaults
+
+File {
+  owner   => "root",
+  group   => "root",
+}
+
+# Repositories
 yumrepo { "epel":
   descr      => "Extra Packages for Enterprise Linux 6 - \$basearch",
   mirrorlist => "https://mirrors.fedoraproject.org/metalink?repo=epel-6&arch=\$basearch",
@@ -35,6 +43,8 @@ package { $php_extensions:
 }
 
 file { "/etc/php.d/apc.ini":
+  owner   => "root",
+  group   => "root",
   source  => "/vagrant/files/apc.ini",
   notify  => Service["httpd"],
   require => Package["php-pecl-apc"],
@@ -65,33 +75,34 @@ yumrepo { "percona":
 
 package { "Percona-Server-client-55":
   alias => "mysql",
-  require => Yumrepo['percona'],
+  require => Yumrepo["percona"],
 }
 package { "Percona-Server-shared-compat":
   alias => "mysql-libs",
-  require => Yumrepo['percona'],
+  require => Yumrepo["percona"],
 }
 package { "Percona-Server-server-55":
   alias => "mysql-server",
-  require => Yumrepo['percona'],
+  require => Yumrepo["percona"],
 }
 package { "Percona-Server-shared-55":
-  require => Yumrepo['percona'],
+  require => Yumrepo["percona"],
 }
 
 package { "percona-toolkit":
-  require => [ Yumrepo['percona'], Package['Percona-Server-shared-compat'] ],
+  require => [ Yumrepo["percona"], Package["Percona-Server-shared-compat"] ],
 }
 
 service { "mysql":
   ensure => "running",
-  require => Package['Percona-Server-server-55'],
+  require => Package["Percona-Server-server-55"],
 }
 
 file { "/etc/my.cnf":
-  source => "/vagrant/files/my.cnf",
-  ensure => "present",
-  notify => Service['mysql'],
+  source  => "/vagrant/files/my.cnf",
+  ensure  => "present",
+  notify  => Service["mysql"],
+  require => Package["Percona-Server-server-55"],
 }
 
 # Memcached
@@ -112,8 +123,8 @@ package { "htop":
   require => Yumrepo["epel"],
 }
 package { "innotop":
-  require => [ Yumrepo["epel"], Package['Percona-Server-shared-compat'], ],
+  require => [ Yumrepo["epel"], Package["Percona-Server-shared-compat"], ],
 }
 package { "mytop":
-  require => [ Yumrepo["epel"], Package['Percona-Server-shared-compat'], ],
+  require => [ Yumrepo["epel"], Package["Percona-Server-shared-compat"], ],
 }
