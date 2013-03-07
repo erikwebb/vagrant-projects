@@ -1,0 +1,16 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant::Config.run do |config|
+  config.vm.box = "Puppetlabs CentOS 6.3 x86_64"
+  config.vm.box_url = "http://puppet-vagrant-boxes.puppetlabs.com/centos-63-x64.box"
+
+  # We're going to need some memory for this
+  config.vm.customize ["modifyvm", :id, "--memory", 2048]
+
+  config.vm.provision :puppet do |puppet|
+    puppet.manifests_path = "manifests"
+    puppet.manifest_file  = "base.pp"
+  end
+
+end
