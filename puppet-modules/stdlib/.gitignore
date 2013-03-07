@@ -1,7 +1,0 @@
-pkg/
-.DS_Store
-metadata.json
-coverage/
-vendor/
-.bundle/
-Gemfile.lock
