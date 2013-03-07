@@ -19,12 +19,15 @@ package { "httpd":
 }
 
 service { "httpd":
-  ensure => "running",
+  ensure  => "running",
+  enable  => true,
+  require => Package["httpd"],
 }
 
 file { "/etc/httpd/httpd.conf":
-  source => "/vagrant/files/httpd.conf",
-  notify => Service["httpd"],
+  source  => "/vagrant/files/httpd.conf",
+  notify  => Service["httpd"],
+  require => Package["httpd"],
 }
 
 # PHP
@@ -36,18 +39,22 @@ file { "/etc/php.ini":
 }
 
 ## Extensions
-$php_extensions = [ "php-devel", "php-gd", "php-mbstring", "php-mysql", "php-pdo", "php-pear", "php-pecl-apc", "php-pecl-memcache", "php-xml" ]
+$php_extensions = [ "php-devel", "php-gd", "php-mbstring", "php-mysql", "php-pdo", "php-pear", "php-pecl-apc", "php-pecl-memcache", "php-pecl-xdebug", "php-xml" ]
 package { $php_extensions:
   notify  => Service["httpd"],
   require => Package["php"],
 }
 
 file { "/etc/php.d/apc.ini":
-  owner   => "root",
-  group   => "root",
   source  => "/vagrant/files/apc.ini",
   notify  => Service["httpd"],
   require => Package["php-pecl-apc"],
+}
+
+file { "/etc/php.d/xdebug.ini":
+  source  => "/vagrant/files/xdebug.ini",
+  notify  => Service["httpd"],
+  require => Package["php-pecl-xdebug"],
 }
 
 exec { "php-xhprof":
@@ -64,6 +71,7 @@ package { "php-pear-Console-Table":
 exec { "drush":
   command => "pear channel-discover pear.drush.org ; pear install drush/drush",
   require => [ Package["php-pear"], Package["php-pear-Console-Table"] ],
+  creates => "/usr/share/pear/drush",
   path    => [ "/usr/bin" ],
 }
 
@@ -78,11 +86,11 @@ yumrepo { "percona":
 }
 
 package { "Percona-Server-client-55":
-  alias => "mysql",
+  alias   => "mysql",
   require => Yumrepo["percona"],
 }
 package { "Percona-Server-shared-compat":
-  alias => "mysql-libs",
+  alias   => "mysql-libs",
   require => Yumrepo["percona"],
 }
 package { "Percona-Server-server-55":
@@ -98,7 +106,8 @@ package { "percona-toolkit":
 }
 
 service { "mysql":
-  ensure => "running",
+  ensure  => "running",
+  enable  => true,
   require => Package["Percona-Server-server-55"],
 }
 
@@ -113,7 +122,9 @@ file { "/etc/my.cnf":
 package { "memcached": }
 
 service { "memcached":
-  ensure => "running",
+  ensure    => "running",
+  enable    => true,
+  require   => Package["memcached"],
   subscribe => [ Package["memcached"], File["/etc/sysconfig/memcached"] ],
 }
 
