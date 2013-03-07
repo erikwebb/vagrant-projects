@@ -57,9 +57,13 @@ exec { "php-xhprof":
   path    => [ "/usr/bin" ],
 }
 
+package { "php-pear-Console-Table":
+  require => Package["php-pear"],
+}
+
 exec { "drush":
   command => "pear channel-discover pear.drush.org ; pear install drush/drush",
-  require => [ Package["php-pear"] ],
+  require => [ Package["php-pear"], Package["php-pear-Console-Table"] ],
   path    => [ "/usr/bin" ],
 }
 
