@@ -1,4 +1,4 @@
-class apache($apache_version = 'latest') {
+class apache {
 
   package { "httpd":
     provider => "yum",
@@ -11,12 +11,15 @@ class apache($apache_version = 'latest') {
   }
   
   file { "/etc/httpd/conf/httpd.conf":
-    content => template('apache/httpd.conf.erb'),
-    notify => Service['httpd'],
+    content => template("apache/httpd.conf.erb"),
+    notify  => Service["httpd"],
+    require => Package["httpd"],
   }
   
   service { "httpd":
     ensure => "running",
+    enable => true,
+    require => Package["httpd"],
   }
 
 }

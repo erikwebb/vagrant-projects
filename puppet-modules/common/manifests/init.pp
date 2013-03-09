@@ -1,4 +1,4 @@
-class common() {
+class common {
 
   yumrepo { "epel":
     descr      => "Extra Packages for Enterprise Linux 6 - \$basearch",

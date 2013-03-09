@@ -1,4 +1,5 @@
 class mysql {
+  include common
 
   # Percona tools
   yumrepo { "percona":
@@ -30,22 +31,23 @@ class mysql {
   }
 
   service { "mysql":
-    ensure => "running",
+    ensure  => "running",
+    enable  => true,
     require => Package['Percona-Server-server-55'],
   }
 
   file { "/etc/my.cnf":
     content => template('mysql/my.cnf.erb'),
-    ensure => "present",
-    notify => Service['mysql'],
+    ensure  => "present",
+    notify  => Service['mysql'],
   }
 
   # Monitoring tools
   package { "innotop":
-    require => Package['Percona-Server-shared-compat'],
+    require => [ Class["common"], Package['Percona-Server-shared-compat'], ],
   }
   package { "mytop":
-    require => Package['Percona-Server-shared-compat'],
+    require => [ Class["common"], Package['Percona-Server-shared-compat'], ],
   }
 
 }
