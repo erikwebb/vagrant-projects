@@ -59,6 +59,11 @@ exec { "enable-jmeter-thread-counts":
   require => Exec["download-jmeter"],
 }
 
+file { "/etc/profile.d/jmeter.sh":
+  content => "PATH=\$PATH:/opt/apache-jmeter-2.9/bin",
+  mode    => 0755,
+}
+
 ## Other utilities
 
 package { "htop":
