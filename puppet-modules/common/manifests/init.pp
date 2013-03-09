@@ -13,4 +13,9 @@ class common() {
     enable => false,
   }
 
+  # Utilities
+  package { "htop":
+    require => Yumrepo["epel"],
+  }
+
 }
