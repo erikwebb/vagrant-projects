@@ -7,6 +7,8 @@ Vagrant::Config.run do |config|
 
   # We're going to need some memory for this
   config.vm.customize ["modifyvm", :id, "--memory", 2048]
+  config.vm.host_name = "vagrant-load-test"
+  config.vm.network :hostonly, "192.168.33.10"
 
   config.vm.provision :puppet do |puppet|
     puppet.manifests_path = "manifests"
