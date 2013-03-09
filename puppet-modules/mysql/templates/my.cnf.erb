@@ -1,0 +1,22 @@
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+user=mysql
+# Disabling symbolic-links is recommended to prevent assorted security risks
+symbolic-links=0
+
+# Cache settings
+query_cache_size=128M
+
+# Slow query log settings
+log_slow_queries
+long_query_time = 0.1
+log-queries-not-using-indexes
+
+# Replication settings
+binlog_format=mixed
+expire_logs_days = 7
+
+[mysqld_safe]
+log-error=/var/log/mysqld.log
+pid-file=/var/run/mysqld/mysqld.pid

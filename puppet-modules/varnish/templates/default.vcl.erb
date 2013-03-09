@@ -1,0 +1,275 @@
+<% backends.each do |backend| -%>
+backend <%= backend["host"] %> {
+  .host = "<%= backend["host"] %>";
+  .port = "<%= backend["port"] %>";
+  .connect_timeout = 2s;
+  .probe = {
+    .url = "/";
+    .interval = 5s;
+    .timeout = 1s;
+    .window = 5;
+    .threshold = 3;
+  }
+}
+<% end -%>
+
+director default round-robin {
+<% backends.each do |backend| -%>
+  {
+    .backend = <%= backend["host"] %>;
+  }
+<% end -%>
+}
+
+# List of IPs that can PURGE URLs (probably on webs and utility servers)
+acl purge {
+  "localhost";
+}
+
+# Incoming requests: Decide whether to try cache or not
+sub vcl_recv {
+
+  # Add simple health check for upstream load balancers
+  if (req.url ~ "^/health-check") {
+    error 200 "UP";
+  }
+
+  # Add the X-Forwarded-For header (Varnish <2.1 used
+  # to do this automatically but not anymore)
+  if (req.http.X-Forwarded-For) {
+    set req.http.X-Forwarded-For = req.http.X-Forwarded-For + ", " + client.ip;
+  } else {
+    set req.http.X-Forwarded-For = client.ip;
+  }
+
+  # Grace: Avoid thundering herd when an object expires by serving
+  # expired stale object during the next N seconds while one request 
+  # is made to the backend for that object.
+  #
+  # If backends are unhealthy, stale content up to N minutes old can
+  # be served instead. By setting this value equal to beresp.grace, 
+  # the maximum grace period can be utilized.
+  if (!req.backend.healthy) {
+     set req.grace = 1d;
+  } else {
+     set req.grace = 15s;
+  }
+
+  # EXAMPLE: How to do an external redirect in Varnish
+  # if (req.http.host ~ "^(www.)?example.com$") {
+  #  error 302;
+  # }
+
+  # Varnish doesn't support Range requests: needs to be piped
+  if (req.http.Range) {
+    return(pipe);
+  }
+
+  # Normalize Accept-Encoding to reduce cache variations per url
+  if (req.http.Accept-Encoding) {
+    # No point in compressing these
+    if (req.url ~ "\.(jpg|png|gif|gz|tgz|bz2|tbz|mp3|ogg)$") {
+      remove req.http.Accept-Encoding;
+    # MSIE 6 bug workaround
+    } elsif(req.http.User-Agent ~ "MSIE 6") {
+      unset req.http.Accept-Encoding;
+    } elsif (req.http.Accept-Encoding ~ "gzip") {
+      set req.http.Accept-Encoding = "gzip";
+    } elsif (req.http.Accept-Encoding ~ "deflate") {
+      set req.http.Accept-Encoding = "deflate";
+    } else {
+      # unkown algorithm
+      remove req.http.Accept-Encoding;
+    }
+  }
+
+  # Don't check cache for POSTs and various other HTTP request types
+  if (req.request != "GET" && req.request != "HEAD") {
+    return(pass);
+  }
+
+  # Don't check cache for cron.php
+  if (req.url ~ "^/cron.php") {
+    return(pass);
+  }
+
+  # Cookie Cache Bypass Drupal module (Pressflow): Don't check cache for 
+  # any user that just submitted a content form within the past 5 to 10 
+  # minutes (depending on Drupal's cache_lifetime setting). 
+  if (req.http.cookie ~ "NO_CACHE") {
+    return(pass);
+  }
+
+  # Don't check cache if the Drupal session cookie is set.
+  # Pressflow pages don't send this cookie to anon users.
+  if (req.http.cookie ~ "(^|;\s*)(S?SESS[a-z0-9]+)=") {
+    return(pass);
+  }
+
+  # Prevent cookie from being hashed with the rest of the request
+  set req.http.X-Cookie = req.http.cookie;
+  remove req.http.cookie;
+
+  # Default cache check
+  return(lookup);
+}
+
+# This is here for the mobile cookie. We could use a Vary: header for this.
+# But a vary lookup is a O(n) operation, while a hash lookup is O(1).
+sub vcl_hash {
+  if (req.http.Cookie) {
+    hash_data(req.http.Cookie);
+  }
+}
+
+# Cache hit: the object was found in cache
+sub vcl_hit {
+  if (req.request == "PURGE") {
+    if (client.ip ~ purge) {
+      set obj.ttl = 0s;
+      error 200 "Purged.";
+    } else {
+      error 401 "Not allowed";
+    }
+  }
+}
+
+# Cache miss: request is about to be sent to the backend
+sub vcl_miss {
+  # PURGE method support
+  if (req.request == "PURGE") {
+    error 404 "Not in cache.";
+  }  
+}
+
+# Note that only the first request to the backend will have
+# X-Forwarded-For set.  If you use X-Forwarded-For and want to
+# have it set for all requests, make sure to have:
+sub vcl_pipe {
+  set req.http.connection = "close";
+}
+
+# Backend response: Determine whether to cache each backend response
+sub vcl_fetch {
+
+  # If a server error occurred, try the request again with other available
+  # backends. The current backend server will not be tried again for this
+  # URL for 10 seconds. If no remaining backends are available, stale content
+  # will be served instead (if available).
+  #
+  # See - http://www.varnish-cache.org/docs/3.0/tutorial/handling_misbehaving_servers.html
+  if (beresp.status == 500) {
+    set beresp.saintmode = 10s;
+    return(restart);
+  }
+
+  # Don't cache errors, non-permananet redirects, HEAD, and POST responses.
+  if (beresp.status > 301 || req.request != "GET") {
+    return(hit_for_pass);
+  }
+
+  # Respect explicit no-cache headers
+  if(beresp.http.Pragma ~ "no-cache" ||
+     beresp.http.Cache-Control ~ "no-cache" ||
+     beresp.http.Cache-Control ~ "private") {
+    return(hit_for_pass);
+  }
+
+  # Remove cookie set by load balancer between Varnish and the web server
+  #set beresp.http.Set-Cookie = regsuball(beresp.http.Set-Cookie, "(^|;\s*)cookie_name=[^;]*", "");
+  #set beresp.http.Set-Cookie = regsub(beresp.http.Set-Cookie, "^;\s*", "");
+  #if (beresp.http.Cookie ~ "^\s*$") {
+  #  unset beresp.http.Set-Cookie;
+  #}
+
+  # Keep this cached page in the Varnish cache for this amount of time,
+  # even if it is stale.
+  set beresp.grace = 1d;
+
+  # Re-add previously removed cookies.
+  set beresp.http.Cookie = req.http.X-Cookie;
+
+  # Helpful debugging for the case where a page was not cached.
+  #
+  # See https://www.varnish-cache.org/trac/wiki/VCLExampleHitMissHeader#Varnish3.0
+
+  # Varnish determined the object was not cacheable
+  if (beresp.ttl <= 0s) {
+    set beresp.http.X-Cacheable = "NO:Not Cacheable";
+  
+  # You don't wish to cache content for logged in users
+  } elsif (req.http.Cookie ~ "(^|;\s*)(S?SESS[a-z0-9]+)=") {
+    set beresp.http.X-Cacheable = "NO:Got Session";
+    return(hit_for_pass);
+  
+  # You are respecting the Cache-Control=private header from the backend
+  } elsif (beresp.http.Cache-Control ~ "private") {
+    set beresp.http.X-Cacheable = "NO:Cache-Control=private";
+    return(hit_for_pass);
+  
+  # Varnish determined the object was cacheable
+  } else {
+    set beresp.http.X-Cacheable = "YES";
+  }
+ 
+  # ....
+
+  # Cache anything else. Returning nothing here would fall-through
+  # to Varnish's default cache store policies.
+  return(deliver);
+}
+
+# Deliver the response to the client
+sub vcl_deliver {
+  # Add an X-Cache diagnostic header
+  if (obj.hits > 0) {
+    set resp.http.X-Cache = "HIT";
+    set resp.http.X-Cache-Hits = obj.hits;
+    # Don't echo cached Set-Cookie headers
+    unset resp.http.Set-Cookie;
+  } else {
+    set resp.http.X-Cache = "MISS";
+  }
+
+  # Remove some headers not needed on production systems
+  unset resp.http.Via;
+  unset resp.http.X-Generator;
+  
+  return(deliver);
+}
+
+# Backend down: Error page returned when all backend servers are down
+sub vcl_error {
+
+  # EXAMPLE: How to do an external redirect in Varnish
+  # in case we need to redirect a site to another balancer.
+  # if (req.http.host ~ "^(www.)?example.com$) {
+  #  if (obj.status == 302) {
+  #    set obj.http.Location = "http://example.net" req.url;
+  #    deliver;
+  #  }
+  # }
+
+  # Default Varnish error
+  set obj.http.Content-Type = "text/html; charset=utf-8";
+
+  synthetic {"<?xml version="1.0" encoding="utf-8"?>
+  <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+  <html>
+    <head>
+      <title>"} + obj.status + " " + obj.response + {"</title>
+    </head>
+    <body>
+    <h1>This server is experiencing technical problems. Please
+try again in a few moments. Thanks for your continued patience, and
+we're sorry for any inconvenience this may cause.</h1>
+    <p>Error "} + obj.status + " " + obj.response + {"</p>
+    <p>"} + obj.response + {"</p>
+      <p>XID: "} + req.xid + {"</p>
+    </body>
+   </html>
+   "};
+  return(deliver);
+}
+
