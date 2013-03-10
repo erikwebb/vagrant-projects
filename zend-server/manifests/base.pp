@@ -36,6 +36,7 @@ package { $php_extensions:
 
 file { "/usr/local/zend/etc/conf.d/uploadprogress.ini":
   content => "extension=uploadprogress.so",
+  require => Package["php-5.3-uploadprogress-zend-server"],
 }
 
 package { "mod-php-5.3-apache2-zend-server":
