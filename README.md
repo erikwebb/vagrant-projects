@@ -26,4 +26,4 @@ Purpose-built for load testing, this installs ab, sysbench, siege, and JMeter by
 
 ### Zend Server
 
-[Zend Server](https://www.zend.com/en/products/server/) and all of its components are configured in order to run Drupal 7.
+[Zend Server](https://www.zend.com/en/products/server/) and all of its components are configured in order to run Drupal 7 (or any other LAMP application).
