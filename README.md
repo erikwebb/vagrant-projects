@@ -1,8 +1,9 @@
 # README
 
-## Dependences
+## Dependencies
 
 1. [Vagrant](http://vagrantup.com/)
+2. [Librarian-puppet](http://librarian-puppet.com/)
 
 ## Summary
 
