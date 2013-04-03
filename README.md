@@ -1,4 +1,4 @@
-# README
+# Erik's Vagrant Projects
 
 ## Dependencies
 
