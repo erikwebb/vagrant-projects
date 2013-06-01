@@ -7,7 +7,7 @@
 
 ## Summary
 
-All projects are different types of VMs to work in a Drupal environment. Each is based on the [CentOS 6.3 VM from Puppet Labs](https://github.com/puppetlabs/puppet-vagrant-boxes) (using Puppet, obviously).
+All projects are different types of VMs to work in a Drupal environment. Each is based on the [CentOS 6.4 VM from Puppet Labs](https://github.com/puppetlabs/puppet-vagrant-boxes) (using Puppet, obviously).
 
 To install all the dependent Puppet modules, use librarian-puppet -
 
