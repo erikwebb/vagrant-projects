@@ -7,6 +7,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.hostname = "vagrant-drupal-testbed"
   config.vm.network :forwarded_port, guest: 80, host: 8080
+  config.vm.network :forwarded_port, guest: 9000, host: 9000 # XDebug
 
   # We're going to need some memory for this
   config.vm.provider :virtualbox do |vb|
