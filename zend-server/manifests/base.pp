@@ -1,5 +1,3 @@
-include common
-
 yumrepo { "Zend":
   descr    => "Zend Server",
   baseurl  => "http://repos.zend.com/zend-server/6.0/rpm/\$basearch",
@@ -48,5 +46,19 @@ service { "zend-server":
   enable => true,
 }
 
-## Install MySQL
+# MySQL
 include mysql
+class { "mysql::server":
+  config_hash => { "root_password" => "" }
+}
+mysql::db { "drupal":
+  user     => "drupal",
+  password => "drupal",
+  host     => "localhost",
+  grant    => ["all"],
+}
+
+# Disable firewall
+class { "firewall":
+  ensure => "stopped",
+}
