@@ -2,7 +2,7 @@
 
 ## Dependencies
 
-1. [Vagrant](http://vagrantup.com/)
+1. [Vagrant](http://vagrantup.com/) >= v1.1
 2. [Librarian-puppet](http://librarian-puppet.com/)
 
 ## Summary
