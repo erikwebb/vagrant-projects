@@ -1,3 +1,5 @@
+include epel
+
 # Web server
 class { "apache":
   default_mods => false
@@ -37,6 +39,28 @@ file { "/etc/php.d/xhprof.ini":
   content => "[xhprof]
 extension=xhprof.so
 xhprof.output_dir=/tmp
+"
+}
+
+exec { "php-xdebug":
+  command => "pecl install xdebug",
+  require => [ Package["php-devel"], Package["php-pear"] ],
+  creates => "/usr/lib64/php/modules/xdebug.so",
+  path    => [ "/usr/bin", "/bin" ],
+}
+
+file { "/etc/php.d/xdebug.ini":
+  require => Exec["php-xdebug"],
+  content => "[xdebug]
+zend_extension=xdebug.so
+xdebug.default_enable=1
+xdebug.collect_params=2
+xdebug.remote_autostart=off
+xdebug.remote_enable=1
+xdebug.remote_handler=dbgp
+xdebug.remote_mode=req
+xdebug.remote_host=localhost
+xdebug.remote_port=9000
 "
 }
 
