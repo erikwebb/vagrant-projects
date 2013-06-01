@@ -21,7 +21,7 @@ Includes a base CentOS 6 installation.
 
 ### Drupal Testbed
 
-Ready-to-use Drupal 7 system based on CentOS 6. This project includes all necessary PHP extensions, Apache, Percona Server 5.5, and Memcached.
+Ready-to-use Drupal 7 system based on CentOS 6. This project includes all necessary PHP extensions, Apache, MySQL, and Memcached.
 
 ### Load Test
 
