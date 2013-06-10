@@ -82,10 +82,12 @@ drush::exec { 'drush-devel-download':
 }
 
 file { "/var/www/html/sites/default/files":
-  ensure => "present",
-  mode => "0777",
+  ensure  => "directory",
+  mode    => "0775",
   require => Drupal::Core["7.22"],
   recurse => "true",
+  group   => "apache",
+  owner   => "apache",
 }
 
 # MySQL
