@@ -30,6 +30,7 @@ package { $puppet_modules:
 exec { "pecl-update":
   command => "pecl channel-update pecl.php.net",
   path    => [ "/usr/bin", "/bin" ],
+  require => Package["php-pear"],
 }
 
 exec { "php-xhprof":
