@@ -52,7 +52,7 @@ exec { "php-xdebug":
 file { "/etc/php.d/xdebug.ini":
   require => Exec["php-xdebug"],
   content => "[xdebug]
-zend_extension=xdebug.so
+zend_extension=/usr/lib64/php/modules/xdebug.so
 xdebug.default_enable=1
 xdebug.collect_params=2
 xdebug.remote_autostart=off
