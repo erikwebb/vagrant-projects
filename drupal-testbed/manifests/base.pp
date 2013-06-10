@@ -80,6 +80,13 @@ drush::exec { 'drush-devel-download':
   root_directory => '/var/www/html',
 }
 
+file { "/var/www/html/sites/default/files":
+  ensure => "present",
+  mode => "0777",
+  require => Drupal::Core["7.22"],
+  recurse => "true",
+}
+
 # MySQL
 include mysql
 class { "mysql::server":
