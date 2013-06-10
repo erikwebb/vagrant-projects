@@ -27,8 +27,13 @@ package { $puppet_modules:
   require => [ Package["httpd"], Class["apache::mod::php"] ],
 }
 
+exec { "pecl-update":
+  command => "pecl channel-update pecl.php.net",
+  path    => [ "/usr/bin", "/bin" ],
+}
+
 exec { "php-xhprof":
-  command => "pecl install xhprof-0.9.2",
+  command => "pecl install xhprof-beta",
   require => [ Package["php-devel"], Package["php-pear"] ],
   creates => "/usr/lib64/php/modules/xhprof.so",
   path    => [ "/usr/bin", "/bin" ],
