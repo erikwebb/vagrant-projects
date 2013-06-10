@@ -76,9 +76,9 @@ include drupal
 drupal::core { "7.22":
   path => "/var/www/html",
 }
-drush::exec { 'drush-devel-download':
-  command        => 'pm-download devel',
-  root_directory => '/var/www/html',
+drush::exec { "drush-devel-download":
+  command        => "pm-download devel",
+  root_directory => "/var/www/html",
 }
 
 file { "/var/www/html/sites/default/files":
@@ -88,6 +88,25 @@ file { "/var/www/html/sites/default/files":
   recurse => "true",
   group   => "apache",
   owner   => "apache",
+}
+
+exec { "drupal-settings-file":
+  command => "cp /var/www/html/sites/default/default.settings.php /var/www/html/sites/default/settings.php",
+  creates => "/var/www/html/sites/default/settings.php",
+  path    => [ "/usr/bin", "/bin" ],
+  require => Drupal::Core["7.22"],
+}
+
+file { "/var/www/html/sites/default/settings.php":
+  group   => "apache",
+  owner   => "apache",
+  require => [ Package["httpd"], Exec["drupal-settings-file"] ],
+}
+
+drush::exec { "drush-site-install":
+  command        => "site-install standard --account-name=admin --account-pass=admin --db-url=mysql://drupal:drupal@127.0.0.1/drupal --site-name=\"Drupal Testbed\" --yes",
+  root_directory => "/var/www/html",
+  require        => [ Drupal::Core["7.22"], Exec["drupal-settings-file"], Service["mysqld"] ],
 }
 
 # MySQL
