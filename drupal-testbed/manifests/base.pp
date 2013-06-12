@@ -20,8 +20,8 @@ class { 'apache::mod::php': }
 class { 'apache::mod::ssl': }
 
 # Drupal-required PHP modules
-$puppet_modules = [ "php-mbstring", "php-gd", "php-xml", "php-pdo", "php-mysql", "php-devel" ]
-package { $puppet_modules:
+$php_modules = [ "php-mbstring", "php-gd", "php-xml", "php-pdo", "php-mysql", "php-devel" ]
+package { $php_modules:
   ensure  => "installed",
   notify  => Service["httpd"],
   require => [ Package["httpd"], Class["apache::mod::php"] ],
@@ -106,7 +106,7 @@ file { "/var/www/html/sites/default/settings.php":
 drush::exec { "drush-site-install":
   command        => "site-install standard --account-name=admin --account-pass=admin --db-url=mysql://drupal:drupal@127.0.0.1/drupal --site-name=\"Drupal Testbed\" --yes",
   root_directory => "/var/www/html",
-  require        => [ Drupal::Core["7.22"], Exec["drupal-settings-file"], Service["mysqld"], Package["php-pdo"], Package["php-mysql"] ],
+  require        => [ Drupal::Core["7.22"], Exec["drupal-settings-file"], Service["mysqld"], Package[$php_modules] ],
 }
 
 # MySQL
