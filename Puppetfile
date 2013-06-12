@@ -3,6 +3,7 @@ forge "http://forge.puppetlabs.com"
 # Utility modules
 mod 'puppetlabs/stdlib'
 mod 'puppetlabs/firewall'
+mod 'stahnma/epel'
 
 # Application modules
 mod 'puppetlabs/apache'
