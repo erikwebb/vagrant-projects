@@ -84,7 +84,7 @@ drush::exec { "drush-devel-download":
 file { "/var/www/html/sites/default/files":
   ensure  => "directory",
   mode    => "0775",
-  require => Drupal::Core["7.22"],
+  require => [ Package["httpd"], Drupal::Core["7.22"] ],
   recurse => "true",
   group   => "apache",
   owner   => "apache",
@@ -106,7 +106,7 @@ file { "/var/www/html/sites/default/settings.php":
 drush::exec { "drush-site-install":
   command        => "site-install standard --account-name=admin --account-pass=admin --db-url=mysql://drupal:drupal@127.0.0.1/drupal --site-name=\"Drupal Testbed\" --yes",
   root_directory => "/var/www/html",
-  require        => [ Drupal::Core["7.22"], Exec["drupal-settings-file"], Service["mysqld"] ],
+  require        => [ Drupal::Core["7.22"], Exec["drupal-settings-file"], Service["mysqld"], Package["php-pdo"], Package["php-mysql"] ],
 }
 
 # MySQL
