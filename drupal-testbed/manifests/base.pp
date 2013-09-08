@@ -19,18 +19,23 @@ apache::mod { 'setenvif': }
 class { 'apache::mod::php': }
 class { 'apache::mod::ssl': }
 
-# Drupal-required PHP modules
-$php_modules = [ "php-mbstring", "php-gd", "php-xml", "php-pdo", "php-mysql", "php-devel" ]
-package { $php_modules:
-  ensure  => "installed",
-  notify  => Service["httpd"],
-  require => [ Package["httpd"], Class["apache::mod::php"] ],
+# Setup global PHP settings
+php::ini { '/etc/php.ini':
+  memory_limit  => '192M',
 }
 
-exec { "pecl-update":
-  command => "pecl channel-update pecl.php.net",
-  path    => [ "/usr/bin", "/bin" ],
-  require => Package["php-pear"],
+# Drupal-required PHP modules
+include php::cli
+php::module { [ 'devel', 'gd', 'mbstring', 'mysql', 'pdo', 'pecl-memcache', 'xml' ]: }
+php::module { 'pecl-apc':
+php::module::ini { 'pecl-apc':
+  pkgname  => 'apc',
+  settings => {
+    'apc.enabled'      => '1',
+    'apc.optimization' => 'on',
+    'apc.shm_size'     => '184M',
+    'apc.stat'         => '1',
+  }
 }
 
 exec { "php-xhprof":
@@ -40,12 +45,11 @@ exec { "php-xhprof":
   path    => [ "/usr/bin", "/bin" ],
 }
 
-file { "/etc/php.d/xhprof.ini":
+php::module::ini { 'xhprof':
   require => Exec["php-xhprof"],
-  content => "[xhprof]
-extension=xhprof.so
-xhprof.output_dir=/tmp
-"
+  settings => {
+    'xhprof.output_dir' => '/tmp',
+  }
 }
 
 exec { "php-xdebug":
@@ -55,19 +59,19 @@ exec { "php-xdebug":
   path    => [ "/usr/bin", "/bin" ],
 }
 
-file { "/etc/php.d/xdebug.ini":
+php::module::ini { 'xdebug':
   require => Exec["php-xdebug"],
-  content => "[xdebug]
-zend_extension=/usr/lib64/php/modules/xdebug.so
-xdebug.default_enable=1
-xdebug.collect_params=2
-xdebug.remote_autostart=off
-xdebug.remote_enable=1
-xdebug.remote_handler=dbgp
-xdebug.remote_mode=req
-xdebug.remote_host=localhost
-xdebug.remote_port=9000
-"
+  settings => {
+    'zend_extension' => '/usr/lib64/php/modules/xdebug.so',
+    'xdebug.default_enable' => '1',
+    'xdebug.collect_params' => '2',
+    'xdebug.remote_autostart' => 'off',
+    'xdebug.remote_enable' => '1',
+    'xdebug.remote_handler' => 'dbgp',
+    'xdebug.remote_mode' => 'req',
+    'xdebug.remote_host' => 'localhost',
+    'xdebug.remote_port' => '9000',
+  }
 }
 
 # Install base Drupal
@@ -130,3 +134,4 @@ class { 'memcached':
 class { "firewall":
   ensure => "stopped",
 }
+
